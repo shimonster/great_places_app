@@ -22,6 +22,9 @@ class _ImageSelectorWidgetState extends State<ImageSelectorWidget> {
       source: ImageSource.camera,
       maxWidth: 600,
     );
+    if (imageFile == null) {
+      return;
+    }
     setState(() {
       _currentImage = File(imageFile.path);
     });

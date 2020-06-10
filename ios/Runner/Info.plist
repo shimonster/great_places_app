@@ -8,6 +8,10 @@
 	<string>'Would you like this app to use your camera'</string>
 	<key>NSCameraUsageDescription</key>
 	<string>'Would you like this app to use your camera'</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>'Would you like this app to have access to your location?'<string>
+	<key>NSLocationAlwaysUsageDescription</key>
+    <string>'Would you like this app to have access to your location?'<string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong/latlong.dart';
+
+import '../screens/map_picker_screen.dart';
 
 class LocationInput extends StatefulWidget {
   @override
@@ -8,10 +12,11 @@ class LocationInput extends StatefulWidget {
 
 class _LocationInputState extends State<LocationInput> {
   String _previewImageUrl;
+  LocationData location;
 
   Future<void> _getCurrentLocation() async {
-    final location = await Location().getLocation();
-    print('(${location.latitude}, ${location.longitude})');
+    location = await Location().getLocation();
+    setState(() {});
   }
 
   @override
@@ -28,13 +33,44 @@ class _LocationInputState extends State<LocationInput> {
               width: 2,
             ),
           ),
-          child: _previewImageUrl == null
+          child: location == null
               ? Text(
                   'No location chosen',
                   textAlign: TextAlign.center,
                 )
-              : Image.network(_previewImageUrl,
-                  fit: BoxFit.cover, width: double.infinity),
+              : FlutterMap(
+                  options: MapOptions(
+                    center: LatLng(
+                      location.latitude,
+                      location.longitude,
+                    ),
+                    interactive: true,
+                  ),
+                  layers: [
+                    TileLayerOptions(
+                      urlTemplate:
+                          "https://api.tomtom.com/map/1/tile/basic/main/"
+                          "{z}/{x}/{y}.png?key={apiKey}",
+                      additionalOptions: {
+                        'apiKey': 'kNNg2Al5OGZUWcCpC0MeaoCQeCCeNzrl',
+                      },
+                    ),
+                    MarkerLayerOptions(
+                      markers: [
+                        Marker(
+                          width: 40,
+                          point: LatLng(location.latitude, location.longitude),
+                          builder: (ctx) => new Container(
+                            child: Icon(
+                              Icons.my_location,
+                              color: Colors.deepOrangeAccent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
         ),
         Row(
           children: <Widget>[
@@ -51,7 +87,8 @@ class _LocationInputState extends State<LocationInput> {
                 label: Text('Select Location'),
                 icon: Icon(Icons.place),
                 textColor: Theme.of(context).accentColor,
-                onPressed: () {},
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(MapPickerScreen.routeName),
               ),
             ),
           ],

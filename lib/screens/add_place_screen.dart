@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../widgets/image_selector_widget.dart';
 import '../widgets/location_input.dart';
+import '../models/place.dart';
 import '../providers/places_provider.dart';
 
 class AddPlaceScreen extends StatefulWidget {
@@ -16,7 +17,8 @@ class AddPlaceScreen extends StatefulWidget {
 class _AddPlaceScreenState extends State<AddPlaceScreen> {
   var _titleController = TextEditingController();
   var _titleFocusNode = FocusNode();
-  var _imageFile;
+  File _imageFile;
+  Location _selectedLocation;
 
   void _saveImage(File image) {
     _imageFile = image;

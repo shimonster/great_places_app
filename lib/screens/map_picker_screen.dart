@@ -12,12 +12,31 @@ class MapPickerScreen extends StatefulWidget {
   _MapPickerScreenState createState() => _MapPickerScreenState();
 }
 
-class _MapPickerScreenState extends State<MapPickerScreen> {
+class _MapPickerScreenState extends State<MapPickerScreen>
+    with TickerProviderStateMixin {
   LatLng _selectedLocation;
   LatLng _currentLocation;
   Function saveLocation;
   bool _isLoading = false;
   final _mapController = MapController();
+  final _moveAnimationController = AnimationController(
+    duration: Duration(seconds: 2),
+    vsync: __MapState(),
+  );
+  Animation<double> _moveLatAnimation;
+  Animation<double> _moveLngAnimation;
+  bool _isMoving = false;
+
+  Widget _map() {
+    return _Map(
+      _mapController,
+      _currentLocation,
+      _selectedLocation,
+      _selectLocation,
+      !_mapController.ready ? _currentLocation : _mapController.center,
+      'expanded',
+    );
+  }
 
   Future<void> _selectLocation([LatLng location]) async {
     if (location == null) {
@@ -38,12 +57,61 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         _selectedLocation = location;
       });
     }
-    print(['selected location', _selectedLocation]);
+  }
+
+  void _animateMove(LatLng end) {
+    _moveAnimationController.reset();
+    print('_animateMove was run');
+    _moveLatAnimation = Tween<double>(
+      begin: _mapController.center.latitude,
+      end: end.latitude,
+    ).animate(
+      CurvedAnimation(
+        parent: _moveAnimationController,
+        curve: Curves.ease,
+      ),
+    );
+    _moveLngAnimation = Tween<double>(
+      begin: _mapController.center.longitude,
+      end: end.longitude,
+    ).animate(
+      CurvedAnimation(
+        parent: _moveAnimationController,
+        curve: Curves.linear,
+      ),
+    );
+    _isMoving = true;
+    setState(() {
+      _moveAnimationController.forward().then((value) {
+        setState(() {
+          _isMoving = false;
+        });
+      });
+    });
   }
 
   @override
   void initState() {
+    print('initState');
     _selectLocation();
+    _moveLatAnimation = Tween<double>(
+      begin: 0,
+      end: 0,
+    ).animate(
+      CurvedAnimation(
+        parent: _moveAnimationController,
+        curve: Curves.ease,
+      ),
+    );
+    _moveLatAnimation = Tween<double>(
+      begin: 0,
+      end: 0,
+    ).animate(
+      CurvedAnimation(
+        parent: _moveAnimationController,
+        curve: Curves.linear,
+      ),
+    );
     super.initState();
   }
 
@@ -63,54 +131,29 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                 )
               : Container(
                   child: Expanded(
-                    child: FlutterMap(
-                      mapController: _mapController,
-                      options: MapOptions(
-                        zoom: 15,
-                        center: _selectedLocation ?? _currentLocation,
-                        onTap: _selectLocation,
-                      ),
-                      layers: [
-                        TileLayerOptions(
-                          urlTemplate:
-                              "https://api.tomtom.com/map/1/tile/basic/main/"
-                              "{z}/{x}/{y}.png?key={apiKey}",
-                          additionalOptions: {
-                            'apiKey': 'kNNg2Al5OGZUWcCpC0MeaoCQeCCeNzrl',
-                          },
-                        ),
-                        MarkerLayerOptions(
-                          markers: [
-                            Marker(
-                              anchorPos: AnchorPos.align(AnchorAlign.center),
-                              point: _currentLocation,
-                              builder: (ctx) => Container(
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                    border:
-                                        Border.all(color: Colors.red, width: 3),
-                                    borderRadius: BorderRadius.circular(100)),
-                                child: Icon(
-                                  Icons.person,
-                                  color: Colors.red.withOpacity(0.7),
-                                ),
-                              ),
+                    child: _moveLngAnimation == null || !_isMoving
+                        ? _map()
+                        : AnimatedBuilder(
+                            animation: _moveLngAnimation,
+                            builder: (ctx, ch) {
+                              _mapController.move(
+                                  LatLng(_moveLatAnimation.value,
+                                      _moveLngAnimation.value),
+                                  15);
+                              print(['animation', _moveLngAnimation.value]);
+                              return _map();
+                            },
+                            child: _Map(
+                              _mapController,
+                              _currentLocation,
+                              _selectedLocation,
+                              _selectLocation,
+                              !_mapController.ready
+                                  ? _currentLocation
+                                  : _mapController.center,
+                              'animation builder',
                             ),
-                            if (_selectedLocation != null &&
-                                _currentLocation != _selectedLocation)
-                              Marker(
-                                anchorPos: AnchorPos.align(AnchorAlign.top),
-                                point: _selectedLocation,
-                                builder: (ctx) => Icon(
-                                  Icons.place,
-                                  size: 30,
-                                  color: Colors.red,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
                   ),
                 ),
           Container(
@@ -141,7 +184,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             InkWell(
-              onTap: () => _mapController.move(_currentLocation, 15),
+              onTap: () {
+                print('go to person on tap');
+                _animateMove(_currentLocation);
+              },
               child: Container(
                 height: 35,
                 width: 25,
@@ -156,7 +202,9 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             InkWell(
               onTap: _selectedLocation == null
                   ? null
-                  : () => _mapController.move(_selectedLocation, 15),
+                  : () {
+                      _animateMove(_selectedLocation);
+                    },
               child: Container(
                 height: 35,
                 width: 25,
@@ -168,6 +216,80 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _Map extends StatefulWidget {
+  final MapController mapController;
+  final LatLng currentLocation;
+  final LatLng selectedLocation;
+  final Function selectLocation;
+  final LatLng mapPos;
+  final String printString;
+
+  const _Map(this.mapController, this.currentLocation, this.selectedLocation,
+      this.selectLocation, this.mapPos, this.printString);
+
+  @override
+  __MapState createState() => __MapState();
+}
+
+class __MapState extends State<_Map> with TickerProviderStateMixin {
+  @override
+  void dispose() {
+    print('map dispose');
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print(widget.printString);
+    return FlutterMap(
+      mapController: widget.mapController,
+      options: MapOptions(
+        zoom: 15,
+        center: widget.mapPos,
+        onTap: widget.selectLocation,
+      ),
+      layers: [
+        TileLayerOptions(
+          urlTemplate: "https://api.tomtom.com/map/1/tile/basic/main/"
+              "{z}/{x}/{y}.png?key={apiKey}",
+          additionalOptions: {
+            'apiKey': 'kNNg2Al5OGZUWcCpC0MeaoCQeCCeNzrl',
+          },
+        ),
+        MarkerLayerOptions(
+          markers: [
+            Marker(
+              anchorPos: AnchorPos.align(AnchorAlign.center),
+              point: widget.currentLocation,
+              builder: (ctx) => Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                    border: Border.all(color: Colors.red, width: 3),
+                    borderRadius: BorderRadius.circular(100)),
+                child: Icon(
+                  Icons.person,
+                  color: Colors.red.withOpacity(0.7),
+                ),
+              ),
+            ),
+            if (widget.selectedLocation != null &&
+                widget.currentLocation != widget.selectedLocation)
+              Marker(
+                anchorPos: AnchorPos.align(AnchorAlign.top),
+                point: widget.selectedLocation,
+                builder: (ctx) => Icon(
+                  Icons.place,
+                  size: 30,
+                  color: Colors.red,
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

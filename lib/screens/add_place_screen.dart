@@ -1,13 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:provider/provider.dart';
-import 'package:latlong/latlong.dart';
 
 import '../widgets/image_selector_widget.dart';
 import '../widgets/location_input.dart';
-import '../models/place.dart' as plc;
+import '../models/place.dart' as pl;
 import '../providers/places_provider.dart';
 
 class AddPlaceScreen extends StatefulWidget {
@@ -20,7 +18,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
   var _titleController = TextEditingController();
   var _titleFocusNode = FocusNode();
   File _imageFile;
-  plc.Location _selectedLocation;
+  pl.Location _selectedLocation;
 
   void _saveImage(File image) {
     _imageFile = image;
@@ -28,8 +26,8 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
 
   void _saveLocation(double lat, double lng, [String address]) {
     _selectedLocation = address != null
-        ? plc.Location(latitude: lat, longitude: lng, address: address)
-        : plc.Location(latitude: lat, longitude: lng, address: address);
+        ? pl.Location(latitude: lat, longitude: lng, address: address)
+        : pl.Location(latitude: lat, longitude: lng, address: address);
   }
 
   void _submitData() {
@@ -37,7 +35,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
       return;
     }
     Provider.of<PlacesProvider>(context, listen: false)
-        .addPlace(_titleController.text, _imageFile);
+        .addPlace(_titleController.text, _imageFile, _selectedLocation);
     Navigator.of(context).pop();
   }
 

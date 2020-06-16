@@ -2,21 +2,22 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
-import '../models/place.dart';
+import '../models/place.dart' as pl;
 import '../helpers/db_helper.dart';
 
 class PlacesProvider with ChangeNotifier {
-  List<Place> _places = [];
+  List<pl.Place> _places = [];
 
-  List<Place> get places {
+  List<pl.Place> get places {
     return [..._places];
   }
 
-  void addPlace(String title, File image) {
-    final newPlace = Place(
+  void addPlace(String title, File image, pl.Location location) {
+    final newPlace = pl.Place(
       id: DateTime.now().toString(),
       title: title,
       image: image,
+      location: location,
     );
     _places.add(newPlace);
     notifyListeners();
@@ -29,11 +30,11 @@ class PlacesProvider with ChangeNotifier {
 
   Future<void> getPlaces() async {
     final response = await DBHelper.getData('user_places');
-    List<Place> retrievedPlaces = [];
+    List<pl.Place> retrievedPlaces = [];
     response.forEach(
       (element) {
         retrievedPlaces.add(
-          Place(
+          pl.Place(
             id: element['id'],
             title: element['title'],
             image: File(element['image']),

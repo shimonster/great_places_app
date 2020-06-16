@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:location/location.dart';
 import 'package:latlong/latlong.dart';
+import '../models/place.dart' as pl;
 
 class MapPickerScreen extends StatefulWidget {
   static const routeName = '/map_picker';
@@ -161,7 +162,12 @@ class _MapPickerScreenState extends State<MapPickerScreen>
               onPressed: _selectedLocation == null
                   ? null
                   : () {
-                      Navigator.of(context).pop(_selectedLocation);
+                      Navigator.of(context).pop(
+                        pl.Location(
+                          latitude: _selectedLocation.latitude,
+                          longitude: _selectedLocation.longitude,
+                        ),
+                      );
                     },
             ),
           ),
@@ -220,10 +226,9 @@ class _Map extends StatefulWidget {
   final LatLng currentLocation;
   final LatLng selectedLocation;
   final Function selectLocation;
-//  final LatLng mapPos;
 
   const _Map(this.mapController, this.currentLocation, this.selectedLocation,
-      this.selectLocation /*, this.mapPos*/);
+      this.selectLocation);
 
   @override
   __MapState createState() => __MapState();
@@ -236,7 +241,7 @@ class __MapState extends State<_Map> with TickerProviderStateMixin {
       mapController: widget.mapController,
       options: MapOptions(
         zoom: 15,
-        center: widget.currentLocation,
+        center: widget.selectedLocation ?? widget.currentLocation,
         onTap: widget.selectLocation,
       ),
       layers: [

@@ -41,6 +41,8 @@ class PlaceListScreen extends StatelessWidget {
                                         FileImage(places.places[i].image),
                                   ),
                                   title: Text(places.places[i].title),
+                                  subtitle: Text(
+                                      '${places.places[i].location.latitude.toStringAsFixed(3)}, ${places.places[i].location.latitude.toStringAsFixed(3)}'),
                                 ),
                               ),
                             );

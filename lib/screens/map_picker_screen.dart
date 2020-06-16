@@ -6,6 +6,8 @@ import 'package:location/location.dart';
 import 'package:latlong/latlong.dart';
 import '../models/place.dart' as pl;
 
+import './add_place_screen.dart';
+
 class MapPickerScreen extends StatefulWidget {
   static const routeName = '/map_picker';
   final LatLng oldLoc;
@@ -71,7 +73,7 @@ class _MapPickerScreenState extends State<MapPickerScreen>
       final currentLocation = LatLng(location.latitude, location.longitude);
       setState(() {
         _currentLocation = currentLocation;
-        if (widget.oldLoc != null) {
+        if (widget.oldLoc != null && currentLocation != widget.oldLoc) {
           _selectedLocation = widget.oldLoc;
         }
         _isLoading = false;
@@ -129,6 +131,11 @@ class _MapPickerScreenState extends State<MapPickerScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text('Select Location'),
+        leading: IconButton(
+          icon: Icon(Icons.clear),
+          onPressed: () => Navigator.of(context)
+              .pushReplacementNamed(AddPlaceScreen.routeName),
+        ),
       ),
       body: Column(
         children: <Widget>[
@@ -145,9 +152,6 @@ class _MapPickerScreenState extends State<MapPickerScreen>
                       _currentLocation,
                       _selectedLocation,
                       _selectLocation,
-//                      !_mapController.ready
-//                          ? _currentLocation
-//                          : _mapController.center,
                     ),
                   ),
                 ),
@@ -162,11 +166,9 @@ class _MapPickerScreenState extends State<MapPickerScreen>
               onPressed: _selectedLocation == null
                   ? null
                   : () {
-                      Navigator.of(context).pop(
-                        pl.Location(
-                          latitude: _selectedLocation.latitude,
-                          longitude: _selectedLocation.longitude,
-                        ),
+                      Navigator.of(context).pushReplacementNamed(
+                        AddPlaceScreen.routeName,
+                        /*arguments: _selectedLocation*/
                       );
                     },
             ),
@@ -268,8 +270,7 @@ class __MapState extends State<_Map> with TickerProviderStateMixin {
                 ),
               ),
             ),
-            if (widget.selectedLocation != null &&
-                widget.currentLocation != widget.selectedLocation)
+            if (widget.selectedLocation != null)
               Marker(
                 anchorPos: AnchorPos.align(AnchorAlign.top),
                 point: widget.selectedLocation,

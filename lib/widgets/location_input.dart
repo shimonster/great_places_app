@@ -7,8 +7,9 @@ import '../screens/map_picker_screen.dart';
 
 class LocationInput extends StatefulWidget {
   final Function saveLocation;
+  final LatLng selectedLocation;
 
-  LocationInput(this.saveLocation);
+  LocationInput({this.saveLocation, this.selectedLocation});
   @override
   _LocationInputState createState() => _LocationInputState();
 }
@@ -16,15 +17,31 @@ class LocationInput extends StatefulWidget {
 class _LocationInputState extends State<LocationInput> {
   LatLng _location;
   final _mapController = MapController();
+  LatLng _selectedLocation;
+
+  @override
+  void initState() {
+    _selectedLocation = widget.selectedLocation;
+    if (_selectedLocation != null) {
+      widget.saveLocation(
+          _selectedLocation.latitude, _selectedLocation.longitude);
+      _setLocation(_selectedLocation);
+    }
+    super.initState();
+  }
+
+  void _setLocation(LatLng loc) {
+    setState(() {
+      _location = loc;
+    });
+    if (_location != null) {
+      _mapController.move(loc, 15);
+    }
+  }
 
   Future<void> _getCurrentLocation() async {
     final loc = await Location().getLocation();
-    setState(() {
-      if (_location != null) {
-        _mapController.move(LatLng(loc.latitude, loc.longitude), 13);
-      }
-      _location = LatLng(loc.latitude, loc.longitude);
-    });
+    _setLocation(LatLng(loc.latitude, loc.longitude));
     widget.saveLocation(loc.latitude, loc.longitude);
   }
 
@@ -50,7 +67,7 @@ class _LocationInputState extends State<LocationInput> {
               : FlutterMap(
                   mapController: _mapController,
                   options: MapOptions(
-                    zoom: 13,
+                    zoom: 15,
                     center: _location,
                     interactive: true,
                   ),
@@ -95,25 +112,11 @@ class _LocationInputState extends State<LocationInput> {
                 label: Text('Select Location'),
                 icon: Icon(Icons.place),
                 textColor: Theme.of(context).accentColor,
-                onPressed: () => Navigator.of(context)
-                    .push(
+                onPressed: () => Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
                     builder: (ctx) => MapPickerScreen(oldLoc: _location),
                   ),
-                )
-                    .then((loc) {
-                  if (loc != null) {
-                    final LatLng location = loc;
-                    widget.saveLocation(location.latitude, location.longitude);
-                    setState(() {
-                      if (_location != null) {
-                        _mapController.move(
-                            LatLng(location.latitude, location.longitude), 13);
-                      }
-                      _location = LatLng(location.latitude, location.longitude);
-                    });
-                  }
-                }),
+                ),
               ),
             ),
           ],

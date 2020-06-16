@@ -5,6 +5,7 @@ import './providers/places_provider.dart';
 import './screens/place_list_screen.dart';
 import './screens/add_place_screen.dart';
 import './screens/map_picker_screen.dart';
+import './helpers/page_animation_helper.dart';
 
 void main() => runApp(MyApp());
 
@@ -18,6 +19,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.green,
           accentColor: Colors.teal,
+          pageTransitionsTheme: PageAnimationTheme(),
         ),
         home: PlaceListScreen(),
         routes: {

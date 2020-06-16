@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:location/location.dart';
@@ -19,23 +21,44 @@ class _MapPickerScreenState extends State<MapPickerScreen>
   Function saveLocation;
   bool _isLoading = false;
   final _mapController = MapController();
-  final _moveAnimationController = AnimationController(
-    duration: Duration(seconds: 2),
+  var _moveAnimationController = AnimationController(
     vsync: __MapState(),
   );
   Animation<double> _moveLatAnimation;
   Animation<double> _moveLngAnimation;
-  bool _isMoving = false;
+  double _distance;
+  Duration _duration;
 
-  Widget _map() {
-    return _Map(
-      _mapController,
-      _currentLocation,
-      _selectedLocation,
-      _selectLocation,
-      !_mapController.ready ? _currentLocation : _mapController.center,
-      'expanded',
+  @override
+  void initState() {
+    _selectLocation();
+    _moveLatAnimation = Tween<double>(
+      begin: 0,
+      end: 0,
+    ).animate(
+      CurvedAnimation(
+        parent: _moveAnimationController,
+        curve: Curves.linear,
+      ),
     );
+    _moveLatAnimation = Tween<double>(
+      begin: 0,
+      end: 0,
+    ).animate(
+      CurvedAnimation(
+        parent: _moveAnimationController,
+        curve: Curves.linear,
+      ),
+    );
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    if (_moveLngAnimation != null) {
+      _moveLngAnimation.removeListener(() {});
+    }
+    super.dispose();
   }
 
   Future<void> _selectLocation([LatLng location]) async {
@@ -60,8 +83,19 @@ class _MapPickerScreenState extends State<MapPickerScreen>
   }
 
   void _animateMove(LatLng end) {
-    _moveAnimationController.reset();
-    print('_animateMove was run');
+    _moveAnimationController = AnimationController(
+      vsync: __MapState(),
+    );
+    _distance = sqrt(pow(_mapController.center.longitude - end.longitude, 2) +
+        pow(_mapController.center.latitude - end.latitude, 2));
+    _duration = Duration(
+      milliseconds: min(
+          int.parse(
+            (_distance * 10000).toStringAsFixed(0),
+          ),
+          1200),
+    );
+    _moveAnimationController.duration = _duration;
     _moveLatAnimation = Tween<double>(
       begin: _mapController.center.latitude,
       end: end.latitude,
@@ -80,39 +114,13 @@ class _MapPickerScreenState extends State<MapPickerScreen>
         curve: Curves.linear,
       ),
     );
-    _isMoving = true;
-    setState(() {
-      _moveAnimationController.forward().then((value) {
-        setState(() {
-          _isMoving = false;
-        });
-      });
+    _moveAnimationController.forward().then((value) {
+      _moveLngAnimation.removeListener(() {});
     });
-  }
-
-  @override
-  void initState() {
-    print('initState');
-    _selectLocation();
-    _moveLatAnimation = Tween<double>(
-      begin: 0,
-      end: 0,
-    ).animate(
-      CurvedAnimation(
-        parent: _moveAnimationController,
-        curve: Curves.ease,
-      ),
-    );
-    _moveLatAnimation = Tween<double>(
-      begin: 0,
-      end: 0,
-    ).animate(
-      CurvedAnimation(
-        parent: _moveAnimationController,
-        curve: Curves.linear,
-      ),
-    );
-    super.initState();
+    _moveLngAnimation.addListener(() {
+      _mapController.move(
+          LatLng(_moveLatAnimation.value, _moveLngAnimation.value), 15);
+    });
   }
 
   @override
@@ -131,29 +139,15 @@ class _MapPickerScreenState extends State<MapPickerScreen>
                 )
               : Container(
                   child: Expanded(
-                    child: _moveLngAnimation == null || !_isMoving
-                        ? _map()
-                        : AnimatedBuilder(
-                            animation: _moveLngAnimation,
-                            builder: (ctx, ch) {
-                              _mapController.move(
-                                  LatLng(_moveLatAnimation.value,
-                                      _moveLngAnimation.value),
-                                  15);
-                              print(['animation', _moveLngAnimation.value]);
-                              return _map();
-                            },
-                            child: _Map(
-                              _mapController,
-                              _currentLocation,
-                              _selectedLocation,
-                              _selectLocation,
-                              !_mapController.ready
-                                  ? _currentLocation
-                                  : _mapController.center,
-                              'animation builder',
-                            ),
-                          ),
+                    child: _Map(
+                      _mapController,
+                      _currentLocation,
+                      _selectedLocation,
+                      _selectLocation,
+//                      !_mapController.ready
+//                          ? _currentLocation
+//                          : _mapController.center,
+                    ),
                   ),
                 ),
           Container(
@@ -185,7 +179,6 @@ class _MapPickerScreenState extends State<MapPickerScreen>
           children: <Widget>[
             InkWell(
               onTap: () {
-                print('go to person on tap');
                 _animateMove(_currentLocation);
               },
               child: Container(
@@ -210,7 +203,9 @@ class _MapPickerScreenState extends State<MapPickerScreen>
                 width: 25,
                 alignment: Alignment.center,
                 child: Icon(Icons.location_on,
-                    color: Theme.of(context).accentColor),
+                    color: _selectedLocation == null
+                        ? Colors.grey
+                        : Theme.of(context).accentColor),
               ),
             ),
           ],
@@ -225,11 +220,10 @@ class _Map extends StatefulWidget {
   final LatLng currentLocation;
   final LatLng selectedLocation;
   final Function selectLocation;
-  final LatLng mapPos;
-  final String printString;
+//  final LatLng mapPos;
 
   const _Map(this.mapController, this.currentLocation, this.selectedLocation,
-      this.selectLocation, this.mapPos, this.printString);
+      this.selectLocation /*, this.mapPos*/);
 
   @override
   __MapState createState() => __MapState();
@@ -237,19 +231,12 @@ class _Map extends StatefulWidget {
 
 class __MapState extends State<_Map> with TickerProviderStateMixin {
   @override
-  void dispose() {
-    print('map dispose');
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    print(widget.printString);
     return FlutterMap(
       mapController: widget.mapController,
       options: MapOptions(
         zoom: 15,
-        center: widget.mapPos,
+        center: widget.currentLocation,
         onTap: widget.selectLocation,
       ),
       layers: [

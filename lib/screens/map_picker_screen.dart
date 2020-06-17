@@ -131,11 +131,6 @@ class _MapPickerScreenState extends State<MapPickerScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text('Select Location'),
-        leading: IconButton(
-          icon: Icon(Icons.clear),
-          onPressed: () => Navigator.of(context)
-              .pushReplacementNamed(AddPlaceScreen.routeName),
-        ),
       ),
       body: Column(
         children: <Widget>[
@@ -166,10 +161,7 @@ class _MapPickerScreenState extends State<MapPickerScreen>
               onPressed: _selectedLocation == null
                   ? null
                   : () {
-                      Navigator.of(context).pushReplacementNamed(
-                        AddPlaceScreen.routeName,
-                        /*arguments: _selectedLocation*/
-                      );
+                      Navigator.of(context).pop(_selectedLocation);
                     },
             ),
           ),

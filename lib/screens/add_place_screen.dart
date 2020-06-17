@@ -20,7 +20,6 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
   File _imageFile;
   pl.Location _selectedLocation;
   var _locationArg;
-  var _didInit = false;
 
   void _saveImage(File image) {
     _imageFile = image;
@@ -42,13 +41,9 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
   }
 
   @override
-  void didChangeDependencies() {
-    if (!_didInit) {
-      _didInit = true;
-      _titleFocusNode.addListener(() => setState(() {}));
-      _locationArg = ModalRoute.of(context).settings.arguments;
-    }
-    super.didChangeDependencies();
+  void initState() {
+    _titleFocusNode.addListener(() => setState(() {}));
+    super.initState();
   }
 
   @override

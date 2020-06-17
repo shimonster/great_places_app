@@ -18,9 +18,11 @@ class _LocationInputState extends State<LocationInput> {
   LatLng _location;
   final _mapController = MapController();
   LatLng _selectedLocation;
+  LocationData _currentLocation;
 
   @override
   void initState() {
+    _getCurrentLocation();
     _selectedLocation = widget.selectedLocation;
     if (_selectedLocation != null) {
       widget.saveLocation(
@@ -31,18 +33,20 @@ class _LocationInputState extends State<LocationInput> {
   }
 
   void _setLocation(LatLng loc) {
-    setState(() {
-      _location = loc;
-    });
     if (_location != null) {
       _mapController.move(loc, 15);
     }
+    setState(() {
+      _location = loc;
+      widget.saveLocation(loc.latitude, loc.longitude);
+//      _mapController.move(
+//          LatLng(_currentLocation.latitude, _currentLocation.longitude), 15);
+    });
   }
 
   Future<void> _getCurrentLocation() async {
     final loc = await Location().getLocation();
     _setLocation(LatLng(loc.latitude, loc.longitude));
-    widget.saveLocation(loc.latitude, loc.longitude);
   }
 
   @override
@@ -59,43 +63,7 @@ class _LocationInputState extends State<LocationInput> {
               width: 2,
             ),
           ),
-          child: _location == null
-              ? Text(
-                  'No location chosen',
-                  textAlign: TextAlign.center,
-                )
-              : FlutterMap(
-                  mapController: _mapController,
-                  options: MapOptions(
-                    zoom: 15,
-                    center: _location,
-                    interactive: true,
-                  ),
-                  layers: [
-                    TileLayerOptions(
-                      urlTemplate:
-                          "https://api.tomtom.com/map/1/tile/basic/main/"
-                          "{z}/{x}/{y}.png?key={apiKey}",
-                      additionalOptions: {
-                        'apiKey': 'kNNg2Al5OGZUWcCpC0MeaoCQeCCeNzrl',
-                      },
-                    ),
-                    MarkerLayerOptions(
-                      markers: [
-                        Marker(
-                          width: 40,
-                          point: _location,
-                          builder: (ctx) => Container(
-                            child: Icon(
-                              Icons.my_location,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+          child: _Map(_mapController, _location, _currentLocation),
         ),
         Row(
           children: <Widget>[
@@ -112,10 +80,56 @@ class _LocationInputState extends State<LocationInput> {
                 label: Text('Select Location'),
                 icon: Icon(Icons.place),
                 textColor: Theme.of(context).accentColor,
-                onPressed: () => Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (ctx) => MapPickerScreen(oldLoc: _location),
-                  ),
+                onPressed: () => Navigator.of(context)
+                    .pushNamed(MapPickerScreen.routeName)
+                    .then((loc) {
+                  final LatLng location = loc;
+                  if (location != null) {
+                    _setLocation(location);
+                  }
+                }),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _Map extends StatelessWidget {
+  _Map(this._mapController, this._location, this._currentLocation);
+
+  final MapController _mapController;
+  final LatLng _location;
+  final _currentLocation;
+
+  @override
+  Widget build(BuildContext context) {
+    return FlutterMap(
+      mapController: _mapController,
+      options: MapOptions(
+        zoom: 15,
+        center: _location ?? _currentLocation,
+        interactive: true,
+      ),
+      layers: [
+        TileLayerOptions(
+          urlTemplate: "https://api.tomtom.com/map/1/tile/basic/main/"
+              "{z}/{x}/{y}.png?key={apiKey}",
+          additionalOptions: {
+            'apiKey': 'kNNg2Al5OGZUWcCpC0MeaoCQeCCeNzrl',
+          },
+        ),
+        MarkerLayerOptions(
+          markers: [
+            Marker(
+              width: 40,
+              point: _location,
+              builder: (ctx) => Container(
+                child: Icon(
+                  Icons.my_location,
+                  color: Colors.red,
                 ),
               ),
             ),

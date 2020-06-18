@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import './providers/places_provider.dart';
 import './screens/place_list_screen.dart';
 import './screens/add_place_screen.dart';
-import './screens/map_picker_screen.dart';
 import './helpers/page_animation_helper.dart';
+import './screens/place_details_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
         home: PlaceListScreen(),
         routes: {
           AddPlaceScreen.routeName: (ctx) => AddPlaceScreen(),
-          MapPickerScreen.routeName: (ctx) => MapPickerScreen(),
+          PlaceDetailsScreen.routeName: (ctx) => PlaceDetailsScreen(),
         },
       ),
     );

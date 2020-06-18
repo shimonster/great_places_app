@@ -22,7 +22,6 @@ class _LocationInputState extends State<LocationInput> {
 
   @override
   void initState() {
-    _getCurrentLocation();
     _selectedLocation = widget.selectedLocation;
     if (_selectedLocation != null) {
       widget.saveLocation(
@@ -34,13 +33,11 @@ class _LocationInputState extends State<LocationInput> {
 
   void _setLocation(LatLng loc) {
     if (_location != null) {
-      _mapController.move(loc, 15);
+      _mapController.move(loc, 14);
     }
     setState(() {
       _location = loc;
       widget.saveLocation(loc.latitude, loc.longitude);
-//      _mapController.move(
-//          LatLng(_currentLocation.latitude, _currentLocation.longitude), 15);
     });
   }
 
@@ -63,7 +60,11 @@ class _LocationInputState extends State<LocationInput> {
               width: 2,
             ),
           ),
-          child: _Map(_mapController, _location, _currentLocation),
+          child: _location == null
+              ? Center(
+                  child: Text('No location selected.'),
+                )
+              : _Map(_mapController, _location, _currentLocation),
         ),
         Row(
           children: <Widget>[
@@ -81,7 +82,12 @@ class _LocationInputState extends State<LocationInput> {
                 icon: Icon(Icons.place),
                 textColor: Theme.of(context).accentColor,
                 onPressed: () => Navigator.of(context)
-                    .pushNamed(MapPickerScreen.routeName)
+                    .push(
+                  MaterialPageRoute(
+                    fullscreenDialog: true,
+                    builder: (ctx) => MapPickerScreen(false, _location),
+                  ),
+                )
                     .then((loc) {
                   final LatLng location = loc;
                   if (location != null) {
@@ -109,7 +115,7 @@ class _Map extends StatelessWidget {
     return FlutterMap(
       mapController: _mapController,
       options: MapOptions(
-        zoom: 15,
+        zoom: 14,
         center: _location ?? _currentLocation,
         interactive: true,
       ),

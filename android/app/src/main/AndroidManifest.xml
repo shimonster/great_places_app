@@ -6,8 +6,6 @@
          In most cases you can leave this as-is, but you if you want to provide
          additional functionality it is fine to subclass or reimplement
          FlutterApplication and put your custom class here. -->
-    <meta-data android:name="com.here.sdk.access_key_id" android:value="LIPnvdtR59-6krMjsZH5hw"/>
-    <meta-data android:name="com.here.sdk.access_key_secret" android:value="8hb13jJamroQyjjEIDo6U78bQZNfY2v7nMcipYbtXEcWKwHJt05QtNrUPaKL84N5rDGBPg12tgkxIdl8iinXsA"/>
     <application
         android:name="io.flutter.app.FlutterApplication"
         android:label="greatplacesapp"

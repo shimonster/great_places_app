@@ -28,7 +28,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
   void _saveLocation(double lat, double lng, [String address]) {
     _selectedLocation = address != null
         ? pl.Location(latitude: lat, longitude: lng, address: address)
-        : pl.Location(latitude: lat, longitude: lng, address: address);
+        : pl.Location(latitude: lat, longitude: lng);
   }
 
   void _submitData() {

@@ -26,7 +26,7 @@ class PlacesProvider with ChangeNotifier {
       'title': newPlace.title,
       'image': newPlace.image.path,
       'loc_lat': newPlace.location.latitude,
-      'loc_lng': newPlace.location.latitude,
+      'loc_lng': newPlace.location.longitude,
     });
   }
 
@@ -40,12 +40,17 @@ class PlacesProvider with ChangeNotifier {
             id: element['id'],
             title: element['title'],
             image: File(element['image']),
-            location: null,
+            location: pl.Location(
+                latitude: element['loc_lat'], longitude: element['loc_lng']),
           ),
         );
       },
     );
     _places = retrievedPlaces;
     notifyListeners();
+  }
+
+  pl.Place getPlaceById(String id) {
+    return _places.firstWhere((element) => element.id == id);
   }
 }

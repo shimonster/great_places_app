@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import './add_place_screen.dart';
 import '../providers/places_provider.dart';
+import './place_details_screen.dart';
 
 class PlaceListScreen extends StatelessWidget {
   @override
@@ -43,6 +44,10 @@ class PlaceListScreen extends StatelessWidget {
                                   title: Text(places.places[i].title),
                                   subtitle: Text(
                                       '${places.places[i].location.latitude.toStringAsFixed(3)}, ${places.places[i].location.latitude.toStringAsFixed(3)}'),
+                                  onTap: () => Navigator.of(context).pushNamed(
+                                    PlaceDetailsScreen.routeName,
+                                    arguments: places.places[i].id,
+                                  ),
                                 ),
                               ),
                             );
